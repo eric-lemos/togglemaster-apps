@@ -27,7 +27,7 @@ O `auth-service` cria chaves de API e valida as chaves usadas pelos serviços ad
 ## Serviços
 
 | Serviço | Porta padrão | Responsabilidade |
-|---|---:|---|
+| --- | ---: | --- |
 | `auth-service` | 8001 | Criação e validação de chaves de API |
 | `flag-service` | 8002 | CRUD das definições de feature flags |
 | `targeting-service` | 8003 | CRUD das regras de segmentação |
@@ -66,7 +66,7 @@ As variáveis acima são apenas exemplos para as URLs de conexão; defina cada u
 Configure as variáveis de ambiente indicadas abaixo. Os serviços Python e o `evaluation-service` carregam um arquivo `.env` local na pasta do próprio serviço. O `auth-service` lê as variáveis diretamente do ambiente do processo; exporte-as no terminal ou configure-as no ambiente de execução.
 
 | Serviço | Variáveis necessárias | Opcionais |
-|---|---|---|
+| --- | --- | --- |
 | `auth-service` | `DATABASE_URL`, `MASTER_KEY` | `PORT` (padrão `8001`) |
 | `flag-service` | `DATABASE_URL`, `AUTH_SERVICE_URL` | `PORT` (padrão `8002`) |
 | `targeting-service` | `DATABASE_URL`, `AUTH_SERVICE_URL` | `PORT` (padrão `8003`) |
@@ -190,7 +190,7 @@ Os exemplos usam `Bearer` no cabeçalho `Authorization`. Defina primeiro `MASTER
 ## API
 
 | Serviço | Método e rota | Autenticação | Descrição |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `auth-service` | `GET /health` | Não | Verificação de saúde |
 | `auth-service` | `POST /admin/keys` | `MASTER_KEY` como Bearer | Cria uma chave de API |
 | `auth-service` | `GET /validate` | Chave de API como Bearer | Valida uma chave |
