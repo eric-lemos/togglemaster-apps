@@ -1,12 +1,17 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	// "github.com/joho/godotenv"
 )
 
@@ -63,8 +68,30 @@ func main() {
 	// Eles são protegidos pelo middleware de autenticação
 	mux.Handle("/admin/keys", app.masterKeyAuthMiddleware(http.HandlerFunc(app.createKeyHandler)))
 
+	shutdownTelemetry, err := setupTelemetry(context.Background())
+	if err != nil {
+		log.Printf("Aviso: telemetria OpenTelemetry desativada: %v", err)
+		shutdownTelemetry = func(context.Context) error { return nil }
+	}
+
+	handler := otelhttp.NewHandler(mux, "auth-service",
+		otelhttp.WithFilter(func(r *http.Request) bool { return r.URL.Path != "/health" }),
+	)
+
+	server := &http.Server{Addr: ":" + port, Handler: handler}
+
+	go func() {
+		stop := make(chan os.Signal, 1)
+		signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+		<-stop
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		_ = server.Shutdown(shutdownCtx)
+		_ = shutdownTelemetry(shutdownCtx)
+	}()
+
 	log.Printf("Serviço de Autenticação (Go) rodando na porta %s", port)
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
 }

@@ -10,11 +10,13 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError
 from dotenv import load_dotenv
 from flask import Flask, jsonify
+from opentelemetry import propagate, trace
 
 # Validando GitOps deployment
 # Configura o logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 # Carrega .env para desenvolvimento local
 load_dotenv()
@@ -51,7 +53,7 @@ except BotoCoreError as e:
 
 # --- SQS Worker ---
 
-def process_message(message):
+def handle_message(message):
     """ Processa uma única mensagem SQS e a insere no DynamoDB """
     try:
         log.info(f"Processando mensagem ID: {message['MessageId']}")
@@ -93,6 +95,20 @@ def process_message(message):
         log.error(f"Erro inesperado ao processar {message['MessageId']}: {e}")
         # Não deleta a mensagem, tenta novamente
 
+def process_message(message):
+    """ Continua o trace iniciado pelo evaluation-service via atributos da mensagem """
+    carrier = {
+        name: value["StringValue"]
+        for name, value in message.get("MessageAttributes", {}).items()
+        if "StringValue" in value
+    }
+    with tracer.start_as_current_span(
+        "sqs.process_message",
+        context=propagate.extract(carrier),
+        kind=trace.SpanKind.CONSUMER,
+    ):
+        handle_message(message)
+
 def sqs_worker_loop():
     """ Loop principal do worker que ouve a fila SQS """
     log.info("Iniciando o worker SQS...")
@@ -102,6 +118,7 @@ def sqs_worker_loop():
             response = sqs_client.receive_message(
                 QueueUrl=SQS_QUEUE_URL,
                 MaxNumberOfMessages=10,  # Processa em lotes de até 10
+                MessageAttributeNames=["All"],
                 WaitTimeSeconds=20
             )
             
