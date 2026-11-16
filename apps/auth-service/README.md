@@ -1,45 +1,53 @@
 # auth-service (Go)
 
-Este é o serviço de autenticação do projeto ToggleMaster. Ele é responsável por criar e validar chaves de API.
+Este é o serviço de autenticação do projeto ToggleMaster. Ele é responsável por
+criar e validar chaves de API.
 
 ## 📦 Pré-requisitos (Local)
 
-* [Go](https://go.dev/doc/install) (versão 1.21 ou superior)
-* [PostgreSQL](https://www.postgresql.org/download/) (rodando localmente ou em um contêiner Docker)
+* [Go](https://go.dev/doc/install) (versão 1.26 ou superior)
+* [PostgreSQL](https://www.postgresql.org/download/) (rodando localmente ou em um
+  contêiner Docker)
 
 ## 🚀 Rodando Localmente
 
-1.  **Clone o repositório** e entre na pasta `auth-service`.
+1. **Clone o repositório** e entre na pasta `apps/auth-service`.
 
-2.  **Prepare o Banco de Dados:**
+2. **Prepare o Banco de Dados:**
     * Crie um banco de dados no seu PostgreSQL (ex: `auth_db`).
     * Execute o script `db/init.sql` para criar a tabela `api_keys`:
+
         ```bash
         psql -U seu_usuario -d auth_db -f db/init.sql
         ```
 
-3.  **Configure as Variáveis de Ambiente:**
-    Crie um arquivo chamado `.env` na raiz desta pasta (`auth-service/`) com o seguinte conteúdo:
-    ```.env
+3. **Configure as Variáveis de Ambiente:**
+    O serviço lê diretamente as variáveis do ambiente; ele não carrega `.env`.
+    No Bash, configure-as antes de iniciar:
+
+    ```bash
     # String de conexão do seu banco de dados PostgreSQL
-    DATABASE_URL="postgres://SEU_USUARIO:SUA_SENHA@localhost:5432/auth_db"
+    export DATABASE_URL="postgres://SEU_USUARIO:SUA_SENHA@localhost:5432/auth_db"
     
     # Porta que o serviço irá rodar
-    PORT="8001"
+    export PORT="8001"
     
     # Chave mestra para criar novas chaves de API
-    MASTER_KEY="admin-secreto-123"
+    export MASTER_KEY="admin-secreto-123"
     ```
 
-4.  **Instale as Dependências:**
+4. **Instale as Dependências:**
+
     ```bash
-    go mod tidy
+    go mod download
     ```
 
-5.  **Inicie o Serviço:**
+5. **Inicie o Serviço:**
+
     ```bash
     go run .
     ```
+
     O servidor estará rodando em `http://localhost:8001`.
 
 ## 🧪 Testando os Endpoints
@@ -47,6 +55,7 @@ Este é o serviço de autenticação do projeto ToggleMaster. Ele é responsáve
 Você pode usar `curl` ou Postman.
 
 **1. Verifique a Saúde (Health Check):**
+
 ```bash
 curl http://localhost:8001/health
 ```
@@ -60,7 +69,7 @@ curl -X POST http://localhost:8001/admin/keys \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer admin-secreto-123" \
 -d '{"name": "meu-primeiro-servico"}'
-``` 
+```
 
 Saída esperada (A SUA CHAVE SERÁ DIFERENTE):
 
@@ -72,7 +81,9 @@ Saída esperada (A SUA CHAVE SERÁ DIFERENTE):
 }
 ```
 
-**3. Valide a Chave que você acabou de criar: (Substitua tm_key_... pela chave exata que você recebeu no passo anterior)**
+**3. Valide a Chave que você acabou de criar:**
+
+Substitua `tm_key_...` pela chave exata que você recebeu no passo anterior.
 
 ```bash
 curl http://localhost:8001/validate \

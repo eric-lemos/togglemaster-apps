@@ -105,7 +105,7 @@ AWS_REGION=us-east-1
 AWS_DYNAMODB_TABLE=ToggleMasterAnalytics
 ```
 
-Use URLs e credenciais próprias para o seu ambiente; não versione arquivos `.env` ou chaves reais. Para acessar a AWS, os SDKs usam a cadeia padrão de credenciais, como perfil local da AWS CLI ou variáveis de ambiente. `AWS_SQS_ENDPOINT` pode ser configurado para apontar a um endpoint compatível com SQS durante desenvolvimento local.
+Use URLs e credenciais próprias para o seu ambiente; não versione arquivos `.env` ou chaves reais. Para acessar a AWS, os SDKs usam a cadeia padrão de credenciais, como perfil local da AWS CLI ou variáveis de ambiente. `AWS_SQS_ENDPOINT` configura um endpoint alternativo para SQS; no `analytics-service`, esse mesmo endpoint também é usado pelo cliente DynamoDB.
 
 O DynamoDB deve ter uma tabela com o nome definido em `AWS_DYNAMODB_TABLE` e uma chave de partição `event_id` do tipo String. A fila SQS deve ser a mesma para o `evaluation-service` e o `analytics-service`. O primeiro precisa permissão para enviar mensagens; o segundo, para receber e excluir mensagens e gravar itens no DynamoDB.
 
